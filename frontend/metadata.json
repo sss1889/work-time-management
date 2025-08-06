@@ -1,0 +1,6 @@
+{
+  "name": "ZenTime - Time & Report Tracker",
+  "description": "A modern and simple time tracking and daily reporting application for teams. Users can log their work hours and daily progress, while administrators can manage users, oversee attendance, and view aggregated reports.",
+  "requestFramePermissions": [],
+  "prompt": ""
+}

@@ -1,0 +1,64 @@
+version: '3.8'
+
+services:
+  backend:
+    env_file:
+      - ./backend/.env
+    image: golang:1.23-alpine
+    ports:
+      - "8088:8080"
+    environment:
+      - DB_HOST=db
+      - DB_PORT=3306
+    volumes:
+      - ./backend:/app
+    working_dir: /app
+    command: sh -c "cd /app && go run cmd/migrate/main.go && go run cmd/seed/main.go && go run cmd/api/main.go"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: mysql:8.0
+    container_name: mysql_container_attendance
+    env_file:
+      - ./backend/.env
+    environment:
+      - MYSQL_ROOT_PASSWORD=yourpassword
+      - MYSQL_DATABASE=attendance_db
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./backend/db_data:/var/lib/mysql
+      - ./backend/my.cnf:/etc/mysql/conf.d/my.cnf
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: phpmyadmin_attendance
+    platform: linux/amd64
+    ports:
+      - "8081:80"
+    environment:
+      PMA_HOST: db
+      PMA_PORT: 3306
+    depends_on:
+      - db
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+      - VITE_API_BASE_URL=http://localhost:8088/api
+    working_dir: /app
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
+    depends_on:
+      - backend
