@@ -16,8 +16,8 @@ const NavItem: React.FC<NavItemProps> = ({ to, icon, label }) => (
     className={({ isActive }) =>
       `flex items-center px-4 py-3 text-sm font-medium transition-colors duration-200 ${
         isActive
-          ? 'bg-primary-100 text-primary-700'
-          : 'text-slate-600 hover:bg-slate-200 hover:text-slate-800'
+          ? 'bg-primary/10 text-primary'
+          : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
       }`
     }
   >
@@ -39,9 +39,9 @@ const Sidebar: React.FC = () => {
   const { user } = useContext(AuthContext);
 
   return (
-    <aside className="w-64 flex-shrink-0 bg-white border-r border-slate-200 flex flex-col">
-      <div className="h-16 flex items-center justify-center border-b border-slate-200">
-        <h1 className="text-2xl font-bold text-primary-600">ZenTime</h1>
+    <aside className="w-64 flex-shrink-0 bg-card border-r flex flex-col">
+      <div className="h-16 flex items-center justify-center border-b px-2">
+        <h1 className="text-xl font-bold text-primary">STAR UP勤怠システム</h1>
       </div>
       <nav className="flex-1 py-4 space-y-1">
         <NavItem to="/time-entry" icon={<TimeIcon />} label="勤怠入力" />
@@ -49,8 +49,8 @@ const Sidebar: React.FC = () => {
         <NavItem to="/reports" icon={<ReportIcon />} label="日報一覧" />
         
         {user?.role === Role.ADMIN && (
-          <div className="pt-4 mt-4 border-t border-slate-200 space-y-1">
-            <h3 className="px-4 text-xs font-semibold uppercase text-slate-400 tracking-wider">管理者</h3>
+          <div className="pt-4 mt-4 border-t space-y-1">
+            <h3 className="px-4 text-xs font-semibold uppercase text-muted-foreground tracking-wider">管理者</h3>
             <NavItem to="/admin/dashboard" icon={<DashboardIcon />} label="ダッシュボード" />
             <NavItem to="/admin/users" icon={<UsersIcon />} label="ユーザー管理" />
             <NavItem to="/admin/payroll" icon={<PayrollIcon />} label="給与" />

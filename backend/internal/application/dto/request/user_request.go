@@ -75,3 +75,21 @@ func (u *UpdateUserRequest) Validate() error {
 	}
 	return nil
 }
+
+type ChangePasswordRequest struct {
+	CurrentPassword string `json:"current_password"`
+	NewPassword     string `json:"new_password"`
+}
+
+func (c *ChangePasswordRequest) Validate() error {
+	if c.CurrentPassword == "" {
+		return errors.New("current password cannot be empty")
+	}
+	if c.NewPassword == "" {
+		return errors.New("new password cannot be empty")
+	}
+	if len(c.NewPassword) < 6 {
+		return errors.New("new password must be at least 6 characters long")
+	}
+	return nil
+}

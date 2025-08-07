@@ -16,6 +16,9 @@ type UserUseCase interface {
 	Login(ctx context.Context, email, password string) (*dto.LoginResponse, error)
 	Logout(ctx context.Context, userID int) error
 
+	// User Profile
+	ChangePassword(ctx context.Context, userID int, req *request.ChangePasswordRequest) error
+
 	// User Management (ADMIN only)
 	// NOTE: These methods should only be called after verifying ADMIN role in the handler/middleware layer
 	GetAllUsers(ctx context.Context) (*dto.UsersResponse, error)
@@ -197,6 +200,37 @@ func (u *userUseCase) DeleteUser(ctx context.Context, userID int) error {
 	// Delete user
 	if err := u.userRepo.Delete(ctx, userID); err != nil {
 		return fmt.Errorf("failed to delete user: %w", err)
+	}
+
+	return nil
+}
+
+// ChangePassword changes a user's password
+func (u *userUseCase) ChangePassword(ctx context.Context, userID int, req *request.ChangePasswordRequest) error {
+	// Get user
+	user, err := u.userRepo.FindById(ctx, userID)
+	if err != nil {
+		return fmt.Errorf("user not found: %w", err)
+	}
+
+	// Verify current password
+	if err := VerifyPassword(user.Password, req.CurrentPassword); err != nil {
+		return errors.New("current password is incorrect")
+	}
+
+	// Hash new password
+	hashedNewPassword, err := HashPassword(req.NewPassword)
+	if err != nil {
+		return fmt.Errorf("failed to hash new password: %w", err)
+	}
+
+	// Update password
+	user.Password = hashedNewPassword
+
+	// Save to repository
+	_, err = u.userRepo.Update(ctx, user)
+	if err != nil {
+		return fmt.Errorf("failed to update password: %w", err)
 	}
 
 	return nil

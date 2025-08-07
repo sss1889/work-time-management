@@ -18,6 +18,8 @@ export interface User {
   payType: PayType;
   payRate: number; // Monthly salary or hourly rate
   goal: number; // Monthly goal
+  createdAt?: string; // ISO string
+  updatedAt?: string; // ISO string
 }
 
 export interface AttendanceRecord {

@@ -2,7 +2,7 @@
 import React, { useState, useContext, useEffect } from 'react';
 import { DataContext } from '../../context/DataContext';
 import { PayType, Role } from '../../types';
-import Card from '../ui/Card';
+import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 
 // Helper to format currency
 const formatCurrency = (amount: number) => {

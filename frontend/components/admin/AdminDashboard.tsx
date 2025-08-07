@@ -1,8 +1,10 @@
 
 import React, { useContext } from 'react';
 import { DataContext } from '../../context/DataContext';
-import Card from '../ui/Card';
+import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
+import { KPICard } from '../ui/kpi-card';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { Users, Clock, TrendingUp } from 'lucide-react';
 
 const AdminDashboard: React.FC = () => {
   const { dashboardData, loading } = useContext(DataContext);
@@ -26,26 +28,49 @@ const AdminDashboard: React.FC = () => {
     );
   }
 
+  // Simple trend data for existing metrics
+  const mockTrend = { value: 12.5, label: "先月比" };
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 animate-fade-in">
+      {/* KPI Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="p-6">
-            <h3 className="text-sm font-medium text-slate-500">総労働時間（今期）</h3>
-            <p className="mt-1 text-3xl font-semibold text-slate-900">{totalStats.totalHours.toFixed(2)}h</p>
-        </Card>
-        <Card className="p-6">
-            <h3 className="text-sm font-medium text-slate-500">総給与支払額</h3>
-            <p className="mt-1 text-3xl font-semibold text-slate-900">{formatCurrency(totalStats.totalSalary)}</p>
-        </Card>
-        <Card className="p-6">
-            <h3 className="text-sm font-medium text-slate-500">アクティブな従業員</h3>
-            <p className="mt-1 text-3xl font-semibold text-slate-900">{totalStats.activeEmployees}</p>
-        </Card>
+        <div className="animate-slide-up animate-stagger-1">
+          <KPICard
+            title="総労働時間"
+            value={`${totalStats.totalHours.toFixed(1)}h`}
+            icon={Clock}
+            description="今月の累計時間"
+            trend={mockTrend}
+          />
+        </div>
+        <div className="animate-slide-up animate-stagger-2">
+          <KPICard
+            title="総給与額"
+            value={formatCurrency(totalStats.totalSalary)}
+            icon={TrendingUp}
+            description="今月の支払累計"
+            trend={{ value: 8.3, label: "先月比" }}
+          />
+        </div>
+        <div className="animate-slide-up animate-stagger-3">
+          <KPICard
+            title="アクティブユーザー"
+            value={totalStats.activeEmployees}
+            icon={Users}
+            description="現在の登録ユーザー数"
+          />
+        </div>
       </div>
 
+
+      {/* Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="p-6">
-          <h3 className="font-semibold text-slate-800 mb-4">従業員別総労働時間</h3>
+        <Card>
+          <CardHeader>
+            <CardTitle>従業員別総労働時間</CardTitle>
+          </CardHeader>
+          <CardContent>
           {employeeData.length > 0 ? (
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={employeeData} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
@@ -62,10 +87,14 @@ const AdminDashboard: React.FC = () => {
               <p>従業員データがありません</p>
             </div>
           )}
+          </CardContent>
         </Card>
 
-        <Card className="p-6">
-          <h3 className="font-semibold text-slate-800 mb-4">従業員別給与</h3>
+        <Card>
+          <CardHeader>
+            <CardTitle>従業員別給与</CardTitle>
+          </CardHeader>
+          <CardContent>
           {employeeData.length > 0 ? (
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={employeeData} margin={{ top: 5, right: 20, left: 20, bottom: 5 }}>
@@ -82,6 +111,7 @@ const AdminDashboard: React.FC = () => {
               <p>従業員データがありません</p>
             </div>
           )}
+          </CardContent>
         </Card>
       </div>
     </div>

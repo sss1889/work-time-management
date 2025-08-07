@@ -9,6 +9,8 @@ export interface UserAPIResponse {
   pay_type: string;
   pay_rate: number;
   goal: number;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface CreateUserDTO {

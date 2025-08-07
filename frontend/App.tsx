@@ -3,12 +3,16 @@ import React, { useState, useContext, useMemo } from 'react';
 import { HashRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { DataProvider, DataContext } from './context/DataContext';
 import { AuthProvider, AuthContext } from './context/AuthContext';
+import { ThemeProvider } from './context/ThemeProvider';
+import { Toaster } from './components/ui/sonner';
 import Login from './components/Login';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
 import TimeEntry from './components/TimeEntry';
 import AttendanceHistory from './components/AttendanceHistory';
 import DailyReports from './components/DailyReports';
+import Profile from './components/Profile';
+import Settings from './components/Settings';
 import AdminDashboard from './components/admin/AdminDashboard';
 import UserManagement from './components/admin/UserManagement';
 import Payroll from './components/admin/Payroll';
@@ -47,6 +51,8 @@ const MainLayout: React.FC = () => {
         '/time-entry': '勤怠入力',
         '/history': '勤怠履歴',
         '/reports': '日報一覧',
+        '/profile': 'プロフィール',
+        '/settings': '設定',
         '/admin/dashboard': '管理者ダッシュボード',
         '/admin/users': 'ユーザー管理',
         '/admin/payroll': '月次給与',
@@ -55,16 +61,18 @@ const MainLayout: React.FC = () => {
     const title = pageTitles[location.pathname] || 'ダッシュボード';
 
     return (
-        <div className="flex h-screen bg-slate-100 font-sans">
+        <div className="flex h-screen bg-background font-sans">
             <Sidebar />
             <div className="flex-1 flex flex-col overflow-hidden">
                 <Header title={title} />
-                <main className="flex-1 overflow-x-hidden overflow-y-auto bg-slate-100 p-4 sm:p-6 lg:p-8">
+                <main className="flex-1 overflow-x-hidden overflow-y-auto bg-background p-4 sm:p-6 lg:p-8">
                     <Routes>
                         <Route path="/" element={<Navigate to="/time-entry" replace />} />
                         <Route path="/time-entry" element={<ProtectedRoute><TimeEntry /></ProtectedRoute>} />
                         <Route path="/history" element={<ProtectedRoute><AttendanceHistory /></ProtectedRoute>} />
                         <Route path="/reports" element={<ProtectedRoute><DailyReports /></ProtectedRoute>} />
+                        <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+                        <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
                         <Route path="/admin/dashboard" element={<ProtectedRoute allowedRoles={[Role.ADMIN]}><AdminDashboard /></ProtectedRoute>} />
                         <Route path="/admin/users" element={<ProtectedRoute allowedRoles={[Role.ADMIN]}><UserManagement /></ProtectedRoute>} />
                         <Route path="/admin/payroll" element={<ProtectedRoute allowedRoles={[Role.ADMIN]}><Payroll /></ProtectedRoute>} />
@@ -79,16 +87,19 @@ const MainLayout: React.FC = () => {
 
 const App: React.FC = () => {
   return (
-    <AuthProvider>
-      <DataProvider>
-          <HashRouter>
-            <Routes>
-              <Route path="/login" element={<Login />} />
-              <Route path="/*" element={<MainLayout />} />
-            </Routes>
-          </HashRouter>
-      </DataProvider>
-    </AuthProvider>
+    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+      <AuthProvider>
+        <DataProvider>
+            <HashRouter>
+              <Toaster richColors position="top-right" />
+              <Routes>
+                <Route path="/login" element={<Login />} />
+                <Route path="/*" element={<MainLayout />} />
+              </Routes>
+            </HashRouter>
+        </DataProvider>
+      </AuthProvider>
+    </ThemeProvider>
   );
 };
 

@@ -2,10 +2,15 @@ import React, { useState, useContext, useMemo, useEffect } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import { DataContext } from '../context/DataContext';
 import { AttendanceRecord, PayType, Role, User } from '../types';
-import Card from './ui/Card';
-import Input from './ui/Input';
-import Button from './ui/Button';
+import { toast } from 'sonner';
+import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
+import { Input } from './ui/input';
+import { Button } from './ui/button';
+import { KPICard } from './ui/kpi-card';
+import { ProgressRing } from './ui/progress-ring';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
 import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { Calendar, Clock, Target, TrendingUp, ArrowUpDown, Edit2, Check, X } from 'lucide-react';
 
 // Helper to calculate detailed info for a single record
 const calculateDailyInfo = (record: AttendanceRecord, user: User | undefined) => {
@@ -69,6 +74,9 @@ const ChevronRightIcon = () => (
     </svg>
 );
 
+type SortField = 'date' | 'workHours' | 'dailySalary';
+type SortOrder = 'asc' | 'desc';
+
 const AttendanceHistory: React.FC = () => {
     const { user: currentUser } = useContext(AuthContext);
     const { users, attendanceRecords, updateAttendanceRecord, fetchUserAttendanceRecords, fetchAttendanceRecords, updateUser } = useContext(DataContext);
@@ -77,6 +85,8 @@ const AttendanceHistory: React.FC = () => {
     const [selectedUserId, setSelectedUserId] = useState<string>('');
     const [editingRecord, setEditingRecord] = useState<AttendanceRecord | null>(null);
     const [monthlyGoal, setMonthlyGoal] = useState<number>(0);
+    const [sortField, setSortField] = useState<SortField>('date');
+    const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
 
     // Set initial selectedUserId when users or currentUser changes
     useEffect(() => {
@@ -123,11 +133,24 @@ const AttendanceHistory: React.FC = () => {
             try {
                 const updatedUser = { ...displayedUser, goal: monthlyGoal };
                 await updateUser(updatedUser);
-                alert('目標が更新されました！');
+                toast.success('目標を更新しました！', {
+                    description: `月次目標: ${formatCurrency(monthlyGoal)}`,
+                });
             } catch (error) {
-                alert('目標の更新に失敗しました。');
+                toast.error('目標の更新に失敗しました', {
+                    description: 'もう一度お試しください',
+                });
                 console.error('Goal update failed:', error);
             }
+        }
+    };
+
+    const handleSort = (field: SortField) => {
+        if (sortField === field) {
+            setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+        } else {
+            setSortField(field);
+            setSortOrder('desc');
         }
     };
     
@@ -174,17 +197,55 @@ const AttendanceHistory: React.FC = () => {
         const selectedYear = currentDate.getFullYear();
         const selectedMonth = currentDate.getMonth();
 
-        return attendanceRecords
+        let filtered = attendanceRecords
             .filter(r => r.userId === selectedUserId)
             .filter(r => {
                 const recordDate = new Date(r.date + 'T00:00:00');
                 return recordDate.getFullYear() === selectedYear && recordDate.getMonth() === selectedMonth;
-            })
-            .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-    }, [attendanceRecords, selectedUserId, currentDate]);
+            });
+
+        // Sort based on current sort settings
+        filtered.sort((a, b) => {
+            let aValue: any, bValue: any;
+            
+            switch (sortField) {
+                case 'date':
+                    aValue = new Date(a.date).getTime();
+                    bValue = new Date(b.date).getTime();
+                    break;
+                case 'workHours':
+                    aValue = displayedUser ? calculateDailyInfo(a, displayedUser).workHours : 0;
+                    bValue = displayedUser ? calculateDailyInfo(b, displayedUser).workHours : 0;
+                    break;
+                case 'dailySalary':
+                    aValue = displayedUser ? calculateDailyInfo(a, displayedUser).dailySalary : 0;
+                    bValue = displayedUser ? calculateDailyInfo(b, displayedUser).dailySalary : 0;
+                    break;
+                default:
+                    aValue = new Date(a.date).getTime();
+                    bValue = new Date(b.date).getTime();
+            }
+
+            if (sortOrder === 'asc') {
+                return aValue > bValue ? 1 : -1;
+            } else {
+                return aValue < bValue ? 1 : -1;
+            }
+        });
+
+        return filtered;
+    }, [attendanceRecords, selectedUserId, currentDate, sortField, sortOrder, displayedUser]);
 
     const totalSalary = useMemo(() => {
         return displayedUser ? calculateTotalSalary(filteredRecords, displayedUser) : 0;
+    }, [filteredRecords, displayedUser]);
+    
+    const totalHours = useMemo(() => {
+        if (!displayedUser) return 0;
+        return filteredRecords.reduce((acc, record) => {
+            const { workHours } = calculateDailyInfo(record, displayedUser);
+            return acc + workHours;
+        }, 0);
     }, [filteredRecords, displayedUser]);
     
     const barChartData = useMemo(() => {
@@ -218,8 +279,8 @@ const AttendanceHistory: React.FC = () => {
     if (!currentUser) return null;
 
     return (
-        <div className="space-y-6">
-            <Card className="p-4 sm:p-6">
+        <div className="space-y-6 animate-fade-in">
+            <Card className="p-4 sm:p-6 animate-scale-in">
                  <div className="flex flex-wrap items-center justify-between gap-y-4 gap-x-2 mb-6">
                     {currentUser.role === Role.ADMIN && (
                         <div className="w-full sm:w-auto">
@@ -243,19 +304,43 @@ const AttendanceHistory: React.FC = () => {
                     </div>
                  </div>
                  
+                {/* KPI Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <div className="animate-slide-up animate-stagger-1">
+                        <KPICard
+                            title="総労働時間"
+                            value={`${totalHours.toFixed(1)}h`}
+                            icon={Clock}
+                            description="今月の累計時間"
+                        />
+                    </div>
+                    <div className="animate-slide-up animate-stagger-2">
+                        <KPICard
+                            title="累計給与"
+                            value={formatCurrency(totalSalary)}
+                            icon={TrendingUp}
+                            description="今月の収入"
+                        />
+                    </div>
+                    <div className="animate-slide-up animate-stagger-3">
+                        <KPICard
+                            title="達成率"
+                            value={`${achievementPercentage}%`}
+                            icon={Target}
+                            description="目標達成率"
+                            valueClassName={achievementPercentage >= 100 ? "text-green-600 dark:text-green-400" : "text-primary"}
+                        />
+                    </div>
+                </div>
+                
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-center">
-                    <div className="lg:col-span-1 relative flex items-center justify-center h-40">
-                         <ResponsiveContainer width="100%" height="100%">
-                            <PieChart>
-                                <Pie data={pieChartData} dataKey="value" innerRadius="70%" outerRadius="100%" startAngle={90} endAngle={450} cornerRadius={5} paddingAngle={monthlyGoal > 0 && totalSalary > 0 ? 2 : 0}>
-                                    {pieChartData.map((entry, index) => <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} stroke={PIE_COLORS[index % PIE_COLORS.length]} />)}
-                                </Pie>
-                            </PieChart>
-                         </ResponsiveContainer>
-                         <div className="absolute flex flex-col items-center justify-center text-center">
-                             <span className="text-3xl font-bold text-slate-800">{achievementPercentage}%</span>
-                             <span className="text-sm text-slate-500 mt-1">達成率</span>
-                         </div>
+                    <div className="lg:col-span-1 flex items-center justify-center">
+                        <ProgressRing
+                            progress={achievementPercentage}
+                            size={160}
+                            strokeWidth={12}
+                            color={achievementPercentage >= 100 ? "#10b981" : "hsl(var(--primary))"}
+                        />
                     </div>
                     <div className="lg:col-span-2 space-y-4">
                         <h3 className="text-lg font-semibold text-slate-800">月次目標進捗</h3>
@@ -294,7 +379,7 @@ const AttendanceHistory: React.FC = () => {
             </Card>
 
             {filteredRecords.length > 0 && (
-                <Card className="p-4 sm:p-6">
+                <Card className="p-4 sm:p-6 animate-slide-up animate-stagger-2">
                     <h3 className="font-semibold text-slate-800 mb-4">日別収入</h3>
                     <ResponsiveContainer width="100%" height={300}>
                         <BarChart data={barChartData} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
@@ -312,48 +397,160 @@ const AttendanceHistory: React.FC = () => {
                 </Card>
             )}
 
-            <Card className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-slate-200">
-                    <thead className="bg-slate-50">
-                        <tr>
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">日付</th>
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">時間</th>
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">休憩（分）</th>
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">労働時間</th>
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">日給</th>
-                             {currentUser.role === Role.ADMIN && <th scope="col" className="relative px-6 py-3"><span className="sr-only">編集</span></th>}
-                        </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-slate-200">
-                        {filteredRecords.map(record => {
-                             const isEditing = editingRecord?.id === record.id;
-                             const { workHours, dailySalary } = calculateDailyInfo(record, displayedUser);
-                            
-                             return (
-                                <tr key={record.id}>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">{isEditing ? <Input type="date" value={editingRecord.date} onChange={e => setEditingRecord({...editingRecord, date: e.target.value})} /> : record.date}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">{isEditing ? <div className="flex gap-2"><Input type="time" value={editingRecord.startTime} onChange={e => setEditingRecord({...editingRecord, startTime: e.target.value})} /><Input type="time" value={editingRecord.endTime} onChange={e => setEditingRecord({...editingRecord, endTime: e.target.value})} /></div> : `${record.startTime} - ${record.endTime}`}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">{isEditing ? <Input type="number" value={editingRecord.breakMinutes} onChange={e => setEditingRecord({...editingRecord, breakMinutes: parseInt(e.target.value)})} /> : record.breakMinutes}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">{workHours.toFixed(2)}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 font-medium">{formatCurrency(dailySalary)}</td>
-                                    {currentUser.role === Role.ADMIN && (
-                                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                            {isEditing ? (
-                                                <div className="flex items-center gap-2">
-                                                    <Button onClick={handleSave} variant="primary">保存</Button>
-                                                    <Button onClick={() => setEditingRecord(null)} variant="secondary">キャンセル</Button>
-                                                </div>
-                                            ) : (
-                                                <Button onClick={() => handleEdit(record)} variant="secondary">編集</Button>
-                                            )}
-                                        </td>
-                                    )}
-                                </tr>
-                             )
-                        })}
-                    </tbody>
-                </table>
-                 {filteredRecords.length === 0 && <p className="text-center text-slate-500 py-8">選択した月の記録は見つかりませんでした。</p>}
+            <Card className="animate-slide-up animate-stagger-3">
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                        <Calendar className="h-5 w-5" />
+                        勤怠履歴詳細
+                    </CardTitle>
+                </CardHeader>
+                <CardContent>
+                    {filteredRecords.length === 0 ? (
+                        <div className="text-center py-12 text-muted-foreground">
+                            <Calendar className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                            <p className="text-lg font-medium mb-2">記録が見つかりませんでした</p>
+                            <p className="text-sm">選択した月の勤怠記録がありません</p>
+                        </div>
+                    ) : (
+                        <div className="rounded-md border">
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead 
+                                            className="cursor-pointer select-none hover:bg-muted/50 transition-colors"
+                                            onClick={() => handleSort('date')}
+                                        >
+                                            <div className="flex items-center gap-2">
+                                                日付
+                                                <ArrowUpDown className="h-4 w-4 opacity-50" />
+                                            </div>
+                                        </TableHead>
+                                        <TableHead>時間</TableHead>
+                                        <TableHead>休憩（分）</TableHead>
+                                        <TableHead 
+                                            className="cursor-pointer select-none hover:bg-muted/50 transition-colors"
+                                            onClick={() => handleSort('workHours')}
+                                        >
+                                            <div className="flex items-center gap-2">
+                                                労働時間
+                                                <ArrowUpDown className="h-4 w-4 opacity-50" />
+                                            </div>
+                                        </TableHead>
+                                        <TableHead 
+                                            className="cursor-pointer select-none hover:bg-muted/50 transition-colors text-right"
+                                            onClick={() => handleSort('dailySalary')}
+                                        >
+                                            <div className="flex items-center justify-end gap-2">
+                                                日給
+                                                <ArrowUpDown className="h-4 w-4 opacity-50" />
+                                            </div>
+                                        </TableHead>
+                                        {currentUser.role === Role.ADMIN && <TableHead className="text-right">操作</TableHead>}
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {filteredRecords.map(record => {
+                                        const isEditing = editingRecord?.id === record.id;
+                                        const { workHours, dailySalary } = calculateDailyInfo(record, displayedUser);
+                                        
+                                        return (
+                                            <TableRow key={record.id} className="hover:bg-muted/50 transition-colors">
+                                                <TableCell className="font-medium">
+                                                    {isEditing ? (
+                                                        <Input 
+                                                            type="date" 
+                                                            value={editingRecord.date} 
+                                                            onChange={e => setEditingRecord({...editingRecord, date: e.target.value})}
+                                                            className="w-full"
+                                                        />
+                                                    ) : (
+                                                        new Date(record.date).toLocaleDateString('ja-JP')
+                                                    )}
+                                                </TableCell>
+                                                <TableCell>
+                                                    {isEditing ? (
+                                                        <div className="flex flex-col sm:flex-row gap-2">
+                                                            <Input 
+                                                                type="time" 
+                                                                value={editingRecord.startTime} 
+                                                                onChange={e => setEditingRecord({...editingRecord, startTime: e.target.value})}
+                                                                className="w-full sm:w-24"
+                                                            />
+                                                            <span className="hidden sm:flex items-center">-</span>
+                                                            <Input 
+                                                                type="time" 
+                                                                value={editingRecord.endTime} 
+                                                                onChange={e => setEditingRecord({...editingRecord, endTime: e.target.value})}
+                                                                className="w-full sm:w-24"
+                                                            />
+                                                        </div>
+                                                    ) : (
+                                                        <div className="flex flex-col sm:flex-row sm:items-center gap-1">
+                                                            <span>{record.startTime}</span>
+                                                            <span className="hidden sm:inline">-</span>
+                                                            <span>{record.endTime}</span>
+                                                        </div>
+                                                    )}
+                                                </TableCell>
+                                                <TableCell>
+                                                    {isEditing ? (
+                                                        <Input 
+                                                            type="number" 
+                                                            value={editingRecord.breakMinutes} 
+                                                            onChange={e => setEditingRecord({...editingRecord, breakMinutes: parseInt(e.target.value)})}
+                                                            className="w-20"
+                                                            min="0"
+                                                        />
+                                                    ) : (
+                                                        `${record.breakMinutes}分`
+                                                    )}
+                                                </TableCell>
+                                                <TableCell>
+                                                    <span className="font-medium">{workHours.toFixed(1)}時間</span>
+                                                </TableCell>
+                                                <TableCell className="text-right font-medium">
+                                                    {formatCurrency(dailySalary)}
+                                                </TableCell>
+                                                {currentUser.role === Role.ADMIN && (
+                                                    <TableCell className="text-right">
+                                                        {isEditing ? (
+                                                            <div className="flex items-center justify-end gap-2">
+                                                                <Button 
+                                                                    onClick={handleSave} 
+                                                                    size="sm"
+                                                                    className="h-8 w-8 p-0"
+                                                                >
+                                                                    <Check className="h-4 w-4" />
+                                                                </Button>
+                                                                <Button 
+                                                                    onClick={() => setEditingRecord(null)} 
+                                                                    variant="outline"
+                                                                    size="sm"
+                                                                    className="h-8 w-8 p-0"
+                                                                >
+                                                                    <X className="h-4 w-4" />
+                                                                </Button>
+                                                            </div>
+                                                        ) : (
+                                                            <Button 
+                                                                onClick={() => handleEdit(record)} 
+                                                                variant="ghost"
+                                                                size="sm"
+                                                                className="h-8 w-8 p-0"
+                                                            >
+                                                                <Edit2 className="h-4 w-4" />
+                                                            </Button>
+                                                        )}
+                                                    </TableCell>
+                                                )}
+                                            </TableRow>
+                                        );
+                                    })}
+                                </TableBody>
+                            </Table>
+                        </div>
+                    )}
+                </CardContent>
             </Card>
         </div>
     );

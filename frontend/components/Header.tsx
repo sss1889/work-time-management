@@ -1,29 +1,19 @@
-
 import React, { useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
-
-const UserIcon: React.FC = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0z" />
-    </svg>
-);
-
-const LogoutIcon: React.FC = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-    </svg>
-);
-
-const Logo: React.FC = () => (
-    <div className="flex items-center">
-        <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" className="mr-2">
-            <path d="M16 2L19.09 11.26L29 12.27L22.5 18.89L24.18 29L16 24.27L7.82 29L9.5 18.89L3 12.27L12.91 11.26L16 2Z" fill="#3B82F6" stroke="#3B82F6" strokeWidth="2" strokeLinejoin="round"/>
-        </svg>
-        <span className="text-xl font-bold text-slate-800">STAR UP勤怠システム</span>
-    </div>
-);
-
+import { useNavigate, useLocation } from 'react-router-dom';
+import { ThemeToggle } from './ui/theme-toggle';
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuLabel, 
+  DropdownMenuSeparator, 
+  DropdownMenuTrigger 
+} from './ui/dropdown-menu';
+import { Button } from './ui/button';
+import { Avatar, AvatarFallback } from './ui/avatar';
+import { Badge } from './ui/badge';
+import { User, LogOut, Settings, Crown, ChevronRight } from 'lucide-react';
 
 interface HeaderProps {
   title: string;
@@ -32,33 +22,116 @@ interface HeaderProps {
 const Header: React.FC<HeaderProps> = ({ title }) => {
   const { user, logout } = useContext(AuthContext);
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleLogout = () => {
     logout();
     navigate('/login');
   };
 
+  const handleProfileClick = () => {
+    navigate('/profile');
+  };
+
+  // Generate breadcrumbs based on current path
+  const getBreadcrumbs = () => {
+    const path = location.pathname;
+    const segments = path.split('/').filter(Boolean);
+    
+    const breadcrumbMap: { [key: string]: string } = {
+      'admin': '管理者',
+      'users': 'ユーザー管理',
+      'attendance': '勤怠管理',
+      'history': '勤怠履歴',
+      'reports': '日報一覧',
+      'dashboard': 'ダッシュボード'
+    };
+
+    if (segments.length === 0) return '勤怠入力';
+    
+    return segments.map(segment => breadcrumbMap[segment] || segment).join(' / ');
+  };
+
   return (
-    <header className="bg-white shadow-sm z-10">
+    <header className="bg-card shadow-sm z-10 border-b">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-          <div className="flex items-center">
-            <Logo />
-          </div>
           <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-2">
-              <span className="text-slate-600 font-medium hidden sm:block">{user?.name}</span>
-              <div className="p-2 bg-slate-100 rounded-full text-slate-500">
-                <UserIcon />
+            <div>
+              <h1 className="text-xl font-semibold text-foreground">STAR UP勤怠システム</h1>
+              <div className="flex items-center text-sm text-muted-foreground mt-0.5">
+                <span>{getBreadcrumbs()}</span>
               </div>
             </div>
-            <button
-              onClick={handleLogout}
-              className="flex items-center text-sm text-slate-600 hover:text-primary-600 transition-colors"
-            >
-              <LogoutIcon />
-              <span className="hidden sm:block">ログアウト</span>
-            </button>
+          </div>
+          
+          <div className="flex items-center space-x-4">
+            <ThemeToggle />
+            
+            {/* Temporary direct links for testing */}
+            <Button variant="ghost" size="sm" onClick={() => navigate('/profile')}>
+              プロフィール
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => navigate('/settings')}>
+              設定
+            </Button>
+            
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+                  <Avatar className="h-10 w-10">
+                    <AvatarFallback className="bg-primary text-primary-foreground">
+                      {user?.name?.slice(0, 1).toUpperCase() || 'U'}
+                    </AvatarFallback>
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              
+              <DropdownMenuContent className="w-56" align="end" forceMount>
+                <DropdownMenuLabel className="font-normal">
+                  <div className="flex flex-col space-y-2">
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-medium leading-none">
+                        {user?.name}
+                      </p>
+                      {user?.role === 'ADMIN' && (
+                        <Badge variant="secondary" className="text-xs">
+                          <Crown className="h-3 w-3 mr-1" />
+                          管理者
+                        </Badge>
+                      )}
+                    </div>
+                    <p className="text-xs leading-none text-muted-foreground">
+                      {user?.email}
+                    </p>
+                  </div>
+                </DropdownMenuLabel>
+                
+                <DropdownMenuSeparator />
+                
+                <DropdownMenuItem onClick={handleProfileClick}>
+                  <User className="mr-2 h-4 w-4" />
+                  <span>プロフィール</span>
+                  <ChevronRight className="ml-auto h-4 w-4" />
+                </DropdownMenuItem>
+                
+                <DropdownMenuItem onClick={() => navigate('/settings')}>
+                  <Settings className="mr-2 h-4 w-4" />
+                  <span>設定</span>
+                  <ChevronRight className="ml-auto h-4 w-4" />
+                </DropdownMenuItem>
+                
+                <DropdownMenuSeparator />
+                
+                <DropdownMenuItem 
+                  onClick={handleLogout}
+                  className="text-red-600 dark:text-red-400 focus:text-red-600 dark:focus:text-red-400"
+                >
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>ログアウト</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </div>
