@@ -8,7 +8,7 @@ export interface UserAPIResponse {
   role: string;
   pay_type: string;
   pay_rate: number;
-  goal: number;
+  goal?: number;
   created_at: string;
   updated_at: string;
 }

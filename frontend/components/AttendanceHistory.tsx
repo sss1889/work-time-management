@@ -5,6 +5,7 @@ import { AttendanceRecord, PayType, Role, User } from '../types';
 import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Input } from './ui/input';
+import { Label } from './ui/label';
 import { Button } from './ui/button';
 import { KPICard } from './ui/kpi-card';
 import { ProgressRing } from './ui/progress-ring';
@@ -355,8 +356,8 @@ const AttendanceHistory: React.FC = () => {
                             </div>
                         </div>
                         <div>
+                             <Label htmlFor="monthly-goal">月次目標を設定（円）</Label>
                              <Input
-                                label="月次目標を設定（円）"
                                 id="monthly-goal"
                                 type="number"
                                 value={monthlyGoal}
@@ -367,7 +368,7 @@ const AttendanceHistory: React.FC = () => {
                              <div className="mt-2">
                                 <Button 
                                     onClick={handleGoalUpdate}
-                                    variant="primary"
+                                    variant="default"
                                     disabled={!displayedUser || monthlyGoal === (displayedUser.goal || 0)}
                                 >
                                     目標を確定

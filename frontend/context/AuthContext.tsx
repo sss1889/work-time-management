@@ -1,5 +1,8 @@
 
+'use client';
+
 import React, { createContext, useState, ReactNode, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { User } from '../types';
 import { authAPI } from '../api/auth';
 import { convertUser } from '../api/converters';
@@ -30,6 +33,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
 
   // Check for existing session on mount
   useEffect(() => {
@@ -58,6 +62,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       
       localStorage.setItem('currentUser', JSON.stringify(user));
       setUser(user);
+      
+      // Set cookie for middleware
+      document.cookie = `token=${response.token}; path=/; max-age=604800`; // 7 days
+      
+      // Use window.location for hard redirect to avoid Next.js router issues
+      window.location.href = '/dashboard';
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed');
       throw err;
@@ -75,8 +85,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       console.error('Logout error:', err);
     } finally {
       localStorage.removeItem('currentUser');
+      localStorage.removeItem('authToken');
+      
+      // Clear cookie
+      document.cookie = 'token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT';
+      
       setUser(null);
       setLoading(false);
+      
+      // Use window.location for hard redirect
+      window.location.href = '/login';
     }
   };
 

@@ -10,12 +10,20 @@ export interface LoginResponse {
     role: string;
     pay_type: string;
     pay_rate: number;
+    goal?: number;
+    created_at: string;
+    updated_at: string;
   };
 }
 
 export const authAPI = {
   async login(email: string, password: string): Promise<LoginResponse> {
-    const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.LOGIN}`, {
+    console.log('Login attempt:', { email, API_BASE_URL, endpoint: API_ENDPOINTS.LOGIN });
+    
+    const url = `${API_BASE_URL}${API_ENDPOINTS.LOGIN}`;
+    console.log('Full URL:', url);
+    
+    const response = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -23,12 +31,16 @@ export const authAPI = {
       body: JSON.stringify({ email, password }),
     });
 
+    console.log('Response status:', response.status);
+
     if (!response.ok) {
       const error = await response.json();
+      console.error('Login error:', error);
       throw new Error(error.error || 'Login failed');
     }
 
     const data = await response.json();
+    console.log('Login success:', data);
     // Store token in localStorage
     localStorage.setItem('authToken', data.token);
     return data;

@@ -1,6 +1,8 @@
+'use client';
+
 import React, { useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useRouter, usePathname } from 'next/navigation';
 import { ThemeToggle } from './ui/theme-toggle';
 import { 
   DropdownMenu, 
@@ -21,21 +23,21 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({ title }) => {
   const { user, logout } = useContext(AuthContext);
-  const navigate = useNavigate();
-  const location = useLocation();
+  const router = useRouter();
+  const pathname = usePathname();
 
   const handleLogout = () => {
     logout();
-    navigate('/login');
+    router.push('/login');
   };
 
   const handleProfileClick = () => {
-    navigate('/profile');
+    router.push('/profile');
   };
 
   // Generate breadcrumbs based on current path
   const getBreadcrumbs = () => {
-    const path = location.pathname;
+    const path = pathname;
     const segments = path.split('/').filter(Boolean);
     
     const breadcrumbMap: { [key: string]: string } = {
@@ -69,10 +71,10 @@ const Header: React.FC<HeaderProps> = ({ title }) => {
             <ThemeToggle />
             
             {/* Temporary direct links for testing */}
-            <Button variant="ghost" size="sm" onClick={() => navigate('/profile')}>
+            <Button variant="ghost" size="sm" onClick={() => router.push('/profile')}>
               プロフィール
             </Button>
-            <Button variant="ghost" size="sm" onClick={() => navigate('/settings')}>
+            <Button variant="ghost" size="sm" onClick={() => router.push('/settings')}>
               設定
             </Button>
             
@@ -115,7 +117,7 @@ const Header: React.FC<HeaderProps> = ({ title }) => {
                   <ChevronRight className="ml-auto h-4 w-4" />
                 </DropdownMenuItem>
                 
-                <DropdownMenuItem onClick={() => navigate('/settings')}>
+                <DropdownMenuItem onClick={() => router.push('/settings')}>
                   <Settings className="mr-2 h-4 w-4" />
                   <span>設定</span>
                   <ChevronRight className="ml-auto h-4 w-4" />

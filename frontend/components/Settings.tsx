@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState, useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import { DataContext } from '../context/DataContext';

@@ -1,6 +1,6 @@
 
 import React, { useState, useContext, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useRouter } from 'next/navigation';
 import { AuthContext } from '../context/AuthContext';
 import { DataContext } from '../context/DataContext';
 import { toast } from 'sonner';
@@ -12,7 +12,7 @@ import { validateEmail, validatePassword } from '../lib/validation';
 
 const Login: React.FC = () => {
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
+  const router = useRouter();
   const { login } = useContext(AuthContext);
 
   // バリデーションルールの定義
@@ -54,7 +54,6 @@ const Login: React.FC = () => {
       const values = getValues();
       await login(values.email, values.password);
       toast.success('ログインに成功しました');
-      navigate('/');
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : 'メールアドレスまたはパスワードが間違っています。';
       toast.error('ログインに失敗しました', {

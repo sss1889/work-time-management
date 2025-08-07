@@ -20,7 +20,7 @@ RUN npm install
 COPY . .
 
 # ポートを解放
-EXPOSE 5173
+EXPOSE 3000
 
-# コンテナ起動時に npm run dev で起動
-CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
+# Next.js開発サーバー起動
+CMD ["npm", "run", "dev"]
