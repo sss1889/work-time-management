@@ -11,6 +11,8 @@ export const convertUser = (apiUser: UserAPIResponse): User => ({
   payType: apiUser.pay_type as PayType,
   payRate: apiUser.pay_rate,
   goal: apiUser.goal || 0,
+  createdAt: apiUser.created_at,
+  updatedAt: apiUser.updated_at,
 });
 
 // Convert API attendance response to frontend AttendanceRecord type

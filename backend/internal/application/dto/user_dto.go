@@ -1,17 +1,20 @@
 package dto
 
 import (
+	"time"
 	"github.com/attendance_report_app/backend/internal/domain/entity"
 )
 
 type UserResponse struct {
-	ID      int    `json:"id"`
-	Email   string `json:"email"`
-	Name    string `json:"name"`
-	Role    string `json:"role"`
-	PayType string `json:"pay_type"`
-	PayRate int    `json:"pay_rate"`
-	Goal    int    `json:"goal"`
+	ID        int       `json:"id"`
+	Email     string    `json:"email"`
+	Name      string    `json:"name"`
+	Role      string    `json:"role"`
+	PayType   string    `json:"pay_type"`
+	PayRate   int       `json:"pay_rate"`
+	Goal      int       `json:"goal"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 }
 
 type LoginResponse struct {
@@ -25,13 +28,15 @@ type UsersResponse struct {
 
 func ToUserResponse(user *entity.User) *UserResponse {
 	return &UserResponse{
-		ID:      user.Id,
-		Email:   user.Email,
-		Name:    user.Name,
-		Role:    string(user.Role),
-		PayType: string(user.PayType),
-		PayRate: user.PayRate,
-		Goal:    user.Goal,
+		ID:        user.Id,
+		Email:     user.Email,
+		Name:      user.Name,
+		Role:      string(user.Role),
+		PayType:   string(user.PayType),
+		PayRate:   user.PayRate,
+		Goal:      user.Goal,
+		CreatedAt: user.CreatedAt,
+		UpdatedAt: user.UpdatedAt,
 	}
 }
 
