@@ -40,8 +40,8 @@ const Sidebar: React.FC = () => {
 
   return (
     <aside className="w-64 flex-shrink-0 bg-white border-r border-slate-200 flex flex-col">
-      <div className="h-16 flex items-center justify-center border-b border-slate-200">
-        <h1 className="text-2xl font-bold text-primary-600">ZenTime</h1>
+      <div className="h-16 flex items-center justify-center border-b border-slate-200 px-2">
+        <h1 className="text-xl font-bold text-primary-600">STAR UP勤怠システム</h1>
       </div>
       <nav className="flex-1 py-4 space-y-1">
         <NavItem to="/time-entry" icon={<TimeIcon />} label="勤怠入力" />

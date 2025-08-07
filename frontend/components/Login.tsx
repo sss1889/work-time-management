@@ -34,7 +34,7 @@ const Login: React.FC = () => {
     <div className="flex items-center justify-center min-h-screen bg-slate-100">
       <Card className="w-full max-w-md p-8 m-4">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-slate-800">ZenTime</h1>
+          <h1 className="text-2xl font-bold text-slate-800">StarUp勤怠管理システム</h1>
           <p className="text-slate-500">アカウントにログインしてください</p>
         </div>
         <form onSubmit={handleSubmit} className="space-y-6">
