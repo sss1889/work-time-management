@@ -1,7 +1,9 @@
 import React, { useState, useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
+import { DataContext } from '../context/DataContext';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
+import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Badge } from './ui/badge';
 import { 
@@ -11,6 +13,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from './ui/select';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from './ui/dialog';
 import { useTheme } from 'next-themes';
 import { 
   Settings as SettingsIcon, 
@@ -30,11 +41,19 @@ import { toast } from 'sonner';
 
 const Settings: React.FC = () => {
   const { user } = useContext(AuthContext);
+  const { changePassword } = useContext(DataContext);
   const { theme, setTheme } = useTheme();
   const [notifications, setNotifications] = useState(true);
   const [language, setLanguage] = useState('ja');
   const [timezone, setTimezone] = useState('Asia/Tokyo');
   const [hasChanges, setHasChanges] = useState(false);
+  
+  // Password change modal state
+  const [passwordModalOpen, setPasswordModalOpen] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [passwordLoading, setPasswordLoading] = useState(false);
 
   const handleThemeChange = (newTheme: string) => {
     setTheme(newTheme);
@@ -75,6 +94,32 @@ const Settings: React.FC = () => {
       case 'light': return 'ライト';
       case 'dark': return 'ダーク';
       default: return 'システム';
+    }
+  };
+
+  const handlePasswordChange = async () => {
+    if (newPassword !== confirmPassword) {
+      toast.error('新しいパスワードが一致しません');
+      return;
+    }
+    
+    if (newPassword.length < 6) {
+      toast.error('パスワードは6文字以上で入力してください');
+      return;
+    }
+    
+    setPasswordLoading(true);
+    try {
+      await changePassword(currentPassword, newPassword);
+      toast.success('パスワードを変更しました');
+      setPasswordModalOpen(false);
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'パスワード変更に失敗しました');
+    } finally {
+      setPasswordLoading(false);
     }
   };
 
@@ -250,10 +295,69 @@ const Settings: React.FC = () => {
           </div>
 
           <div className="pt-4 border-t">
-            <Button variant="outline" className="w-full sm:w-auto" onClick={() => {/* TODO: パスワード変更モーダル */}}>
-              <Lock className="h-4 w-4 mr-2" />
-              パスワードを変更
-            </Button>
+            <Dialog open={passwordModalOpen} onOpenChange={setPasswordModalOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" className="w-full sm:w-auto">
+                  <Lock className="h-4 w-4 mr-2" />
+                  パスワードを変更
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle>パスワードの変更</DialogTitle>
+                  <DialogDescription>
+                    現在のパスワードと新しいパスワードを入力してください
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="current-password">現在のパスワード</Label>
+                    <Input
+                      id="current-password"
+                      type="password"
+                      value={currentPassword}
+                      onChange={(e) => setCurrentPassword(e.target.value)}
+                      placeholder="現在のパスワードを入力"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="new-password">新しいパスワード</Label>
+                    <Input
+                      id="new-password"
+                      type="password"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      placeholder="新しいパスワードを入力 (6文字以上)"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="confirm-password">新しいパスワード（確認）</Label>
+                    <Input
+                      id="confirm-password"
+                      type="password"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      placeholder="新しいパスワードを再入力"
+                    />
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button
+                    variant="outline"
+                    onClick={() => setPasswordModalOpen(false)}
+                    disabled={passwordLoading}
+                  >
+                    キャンセル
+                  </Button>
+                  <Button
+                    onClick={handlePasswordChange}
+                    disabled={!currentPassword || !newPassword || !confirmPassword || passwordLoading}
+                  >
+                    {passwordLoading ? '変更中...' : 'パスワードを変更'}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </div>
         </CardContent>
       </Card>

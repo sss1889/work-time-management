@@ -20,6 +20,7 @@ interface DataContextType {
   addUser: (user: Omit<User, 'id'>) => Promise<void>;
   updateUser: (user: User) => Promise<void>;
   deleteUser: (userId: string) => Promise<void>;
+  changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
   
   // Attendance methods
   fetchAttendanceRecords: (month?: string) => Promise<void>;
@@ -48,6 +49,7 @@ export const DataContext = createContext<DataContextType>({
   addUser: async () => {},
   updateUser: async () => {},
   deleteUser: async () => {},
+  changePassword: async () => {},
   fetchAttendanceRecords: async () => {},
   fetchUserAttendanceRecords: async () => {},
   addAttendanceRecord: async () => {},
@@ -173,6 +175,33 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
       setUsers(prev => prev.filter(u => u.id !== userId));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to delete user');
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Change password
+  const changePassword = useCallback(async (currentPassword: string, newPassword: string) => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const response = await fetch(`${API_BASE_URL}/profile/change-password`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({
+          current_password: currentPassword,
+          new_password: newPassword,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to change password');
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to change password');
       throw err;
     } finally {
       setLoading(false);
@@ -337,6 +366,7 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
     addUser,
     updateUser,
     deleteUser,
+    changePassword,
     fetchAttendanceRecords,
     fetchUserAttendanceRecords,
     addAttendanceRecord,

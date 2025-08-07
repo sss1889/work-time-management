@@ -214,19 +214,12 @@ func (u *userUseCase) ChangePassword(ctx context.Context, userID int, req *reque
 	}
 
 	// Verify current password
-	hashedCurrentPassword, err := hashPassword(req.CurrentPassword)
-	if err != nil {
-		return fmt.Errorf("failed to hash current password: %w", err)
-	}
-
-	// In a real implementation, you should properly verify the password
-	// For now, we'll assume the password hashing matches the stored password
-	if user.Password != hashedCurrentPassword {
+	if err := VerifyPassword(user.Password, req.CurrentPassword); err != nil {
 		return errors.New("current password is incorrect")
 	}
 
 	// Hash new password
-	hashedNewPassword, err := hashPassword(req.NewPassword)
+	hashedNewPassword, err := HashPassword(req.NewPassword)
 	if err != nil {
 		return fmt.Errorf("failed to hash new password: %w", err)
 	}
