@@ -2,6 +2,7 @@ import React, { useState, useContext, useMemo, useEffect } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import { DataContext } from '../context/DataContext';
 import { AttendanceRecord, PayType, Role, User } from '../types';
+import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Input } from './ui/input';
 import { Button } from './ui/button';
@@ -123,9 +124,13 @@ const AttendanceHistory: React.FC = () => {
             try {
                 const updatedUser = { ...displayedUser, goal: monthlyGoal };
                 await updateUser(updatedUser);
-                alert('目標が更新されました！');
+                toast.success('目標を更新しました！', {
+                    description: `月次目標: ${formatCurrency(monthlyGoal)}`,
+                });
             } catch (error) {
-                alert('目標の更新に失敗しました。');
+                toast.error('目標の更新に失敗しました', {
+                    description: 'もう一度お試しください',
+                });
                 console.error('Goal update failed:', error);
             }
         }

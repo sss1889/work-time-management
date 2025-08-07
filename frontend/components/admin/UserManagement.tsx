@@ -2,6 +2,7 @@
 import React, { useState, useContext, useMemo } from 'react';
 import { DataContext } from '../../context/DataContext';
 import { User, Role, PayType } from '../../types';
+import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
@@ -74,14 +75,26 @@ const UserManagement: React.FC = () => {
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [editingUser, setEditingUser] = useState<User | null>(null);
 
-    const handleSaveUser = (user: Omit<User, 'id'> | User) => {
-        if ('id' in user) {
-            updateUser(user);
-        } else {
-            addUser(user as Omit<User, 'id'>);
+    const handleSaveUser = async (user: Omit<User, 'id'> | User) => {
+        try {
+            if ('id' in user) {
+                await updateUser(user);
+                toast.success('ユーザーを更新しました', {
+                    description: `${user.name}の情報を更新しました`,
+                });
+            } else {
+                await addUser(user as Omit<User, 'id'>);
+                toast.success('ユーザーを追加しました', {
+                    description: `${user.name}を新規追加しました`,
+                });
+            }
+            setIsFormOpen(false);
+            setEditingUser(null);
+        } catch (error) {
+            toast.error('操作に失敗しました', {
+                description: 'もう一度お試しください',
+            });
         }
-        setIsFormOpen(false);
-        setEditingUser(null);
     };
     
     const handleEdit = (user: User) => {
@@ -128,7 +141,18 @@ const UserManagement: React.FC = () => {
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">{new Intl.NumberFormat('ja-JP').format(user.payRate)} JPY / {user.payType === PayType.HOURLY ? 'hr' : 'mo'}</td>
                                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
                                     <Button onClick={() => handleEdit(user)} variant="secondary">編集</Button>
-                                    <Button onClick={() => deleteUser(user.id)} variant="danger" disabled={user.role === Role.ADMIN}>削除</Button>
+                                    <Button onClick={async () => {
+                                        try {
+                                            await deleteUser(user.id);
+                                            toast.success('ユーザーを削除しました', {
+                                                description: `${user.name}を削除しました`,
+                                            });
+                                        } catch (error) {
+                                            toast.error('削除に失敗しました', {
+                                                description: 'もう一度お試しください',
+                                            });
+                                        }
+                                    }} variant="danger" disabled={user.role === Role.ADMIN}>削除</Button>
                                 </td>
                             </tr>
                         ))}

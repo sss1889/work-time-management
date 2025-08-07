@@ -3,6 +3,7 @@ import React, { useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import { DataContext } from '../context/DataContext';
+import { toast } from 'sonner';
 import { Card, CardContent } from './ui/card';
 import { Input } from './ui/input';
 import { Button } from './ui/button';
@@ -23,9 +24,14 @@ const Login: React.FC = () => {
 
     try {
       await login(email, password);
+      toast.success('ログインに成功しました');
       navigate('/');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'メールアドレスまたはパスワードが間違っています。');
+      const errorMsg = err instanceof Error ? err.message : 'メールアドレスまたはパスワードが間違っています。';
+      setError(errorMsg);
+      toast.error('ログインに失敗しました', {
+        description: errorMsg,
+      });
     } finally {
       setLoading(false);
     }

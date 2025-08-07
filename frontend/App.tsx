@@ -4,6 +4,7 @@ import { HashRouter, Routes, Route, Navigate, useLocation } from 'react-router-d
 import { DataProvider, DataContext } from './context/DataContext';
 import { AuthProvider, AuthContext } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeProvider';
+import { Toaster } from './components/ui/sonner';
 import Login from './components/Login';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
@@ -84,6 +85,7 @@ const App: React.FC = () => {
       <AuthProvider>
         <DataProvider>
             <HashRouter>
+              <Toaster richColors position="top-right" />
               <Routes>
                 <Route path="/login" element={<Login />} />
                 <Route path="/*" element={<MainLayout />} />

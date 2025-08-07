@@ -2,6 +2,7 @@
 import React, { useState, useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import { DataContext } from '../context/DataContext';
+import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Input } from './ui/input';
 import { Button } from './ui/button';
@@ -19,20 +20,23 @@ const TimeEntry: React.FC = () => {
   const [report, setReport] = useState('');
   const [message, setMessage] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
 
-    addAttendanceRecord({
-      userId: user.id,
-      date,
-      startTime,
-      endTime,
-      breakMinutes: parseInt(breakMinutes, 10) || 0,
-      report,
-    });
-    
-    setMessage('勤怠時間が正常に記録されました！');
+    try {
+      await addAttendanceRecord({
+        userId: user.id,
+        date,
+        startTime,
+        endTime,
+        breakMinutes: parseInt(breakMinutes, 10) || 0,
+        report,
+      });
+      
+      toast.success('勤怠時間が正常に記録されました！', {
+        description: `${date} の勤怠記録を保存しました`,
+      });
     
     // Reset form
     setDate(today);
@@ -41,7 +45,11 @@ const TimeEntry: React.FC = () => {
     setBreakMinutes('60');
     setReport('');
 
-    setTimeout(() => setMessage(''), 3000);
+    } catch (error) {
+      toast.error('勤怠記録の保存に失敗しました', {
+        description: 'もう一度お試しください',
+      });
+    }
   };
 
   return (
@@ -112,7 +120,6 @@ const TimeEntry: React.FC = () => {
             />
           </div>
           <div className="flex items-center justify-between pt-2">
-            {message && <p className="text-green-600 text-sm">{message}</p>}
             <Button type="submit" className="ml-auto">
 記録を送信
             </Button>
