@@ -2,9 +2,10 @@
 import React, { useState, useContext, useMemo } from 'react';
 import { DataContext } from '../../context/DataContext';
 import { User, Role, PayType } from '../../types';
-import Card from '../ui/Card';
-import Button from '../ui/Button';
-import Input from '../ui/Input';
+import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
+import { Button } from '../ui/button';
+import { Input } from '../ui/input';
+import { Label } from '../ui/label';
 
 const UserForm: React.FC<{ user?: User | null; onSave: (user: Omit<User, 'id'> | User) => void; onCancel: () => void; }> = ({ user, onSave, onCancel }) => {
     const [formData, setFormData] = useState({

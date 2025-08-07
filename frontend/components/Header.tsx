@@ -2,6 +2,7 @@
 import React, { useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { ThemeToggle } from './ui/theme-toggle';
 
 const UserIcon: React.FC = () => (
     <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -31,21 +32,22 @@ const Header: React.FC<HeaderProps> = ({ title }) => {
   };
 
   return (
-    <header className="bg-white shadow-sm z-10">
+    <header className="bg-card shadow-sm z-10 border-b">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center">
           </div>
           <div className="flex items-center space-x-4">
+            <ThemeToggle />
             <div className="flex items-center space-x-2">
-              <span className="text-slate-600 font-medium hidden sm:block">{user?.name}</span>
-              <div className="p-2 bg-slate-100 rounded-full text-slate-500">
+              <span className="text-muted-foreground font-medium hidden sm:block">{user?.name}</span>
+              <div className="p-2 bg-muted rounded-full text-muted-foreground">
                 <UserIcon />
               </div>
             </div>
             <button
               onClick={handleLogout}
-              className="flex items-center text-sm text-slate-600 hover:text-primary-600 transition-colors"
+              className="flex items-center text-sm text-muted-foreground hover:text-primary transition-colors"
             >
               <LogoutIcon />
               <span className="hidden sm:block">ログアウト</span>

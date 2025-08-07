@@ -1,7 +1,7 @@
 
 import React, { useContext } from 'react';
 import { DataContext } from '../../context/DataContext';
-import Card from '../ui/Card';
+import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 const AdminDashboard: React.FC = () => {

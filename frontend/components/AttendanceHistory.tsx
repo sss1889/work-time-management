@@ -2,9 +2,9 @@ import React, { useState, useContext, useMemo, useEffect } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import { DataContext } from '../context/DataContext';
 import { AttendanceRecord, PayType, Role, User } from '../types';
-import Card from './ui/Card';
-import Input from './ui/Input';
-import Button from './ui/Button';
+import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
+import { Input } from './ui/input';
+import { Button } from './ui/button';
 import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 // Helper to calculate detailed info for a single record

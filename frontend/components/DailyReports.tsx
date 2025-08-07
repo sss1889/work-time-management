@@ -1,7 +1,7 @@
 
 import React, { useContext, useEffect, useMemo } from 'react';
 import { DataContext } from '../context/DataContext';
-import Card from './ui/Card';
+import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 
 const DailyReports: React.FC = () => {
   const { dailyReports, fetchDailyReports, loading } = useContext(DataContext);

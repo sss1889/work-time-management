@@ -32,12 +32,12 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-slate-100">
+    <div className="flex items-center justify-center min-h-screen bg-background">
       <Card className="w-full max-w-md m-4">
         <CardContent className="p-8">
         <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold text-slate-800">StarUp勤怠管理システム</h1>
-          <p className="text-slate-500">アカウントにログインしてください</p>
+          <h1 className="text-2xl font-bold">StarUp勤怠管理システム</h1>
+          <p className="text-muted-foreground">アカウントにログインしてください</p>
         </div>
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
@@ -66,7 +66,7 @@ const Login: React.FC = () => {
           <Button type="submit" className="w-full" disabled={loading}>
             {loading ? 'ログイン中...' : 'ログイン'}
           </Button>
-          <div className="text-xs text-slate-500 text-center space-y-2 pt-4">
+          <div className="text-xs text-muted-foreground text-center space-y-2 pt-4">
             <p><strong>管理者:</strong> admin@example.com / admin123</p>
             <p><strong>ユーザー:</strong> test@example.com / test123</p>
           </div>
