@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
+import { Eye, EyeOff } from 'lucide-react';
 
 const UserForm: React.FC<{ user?: User | null; onSave: (user: Omit<User, 'id'> | User) => void; onCancel: () => void; }> = ({ user, onSave, onCancel }) => {
     const [formData, setFormData] = useState({
@@ -17,6 +18,7 @@ const UserForm: React.FC<{ user?: User | null; onSave: (user: Omit<User, 'id'> |
         payType: user?.payType || PayType.HOURLY,
         payRate: user?.payRate || 0,
     });
+    const [showPassword, setShowPassword] = useState(false);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
@@ -39,10 +41,45 @@ const UserForm: React.FC<{ user?: User | null; onSave: (user: Omit<User, 'id'> |
             <h3 className="text-lg font-medium text-slate-900 mb-4">{user ? 'ユーザー編集' : '新規ユーザー追加'}</h3>
             <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <Input label="名前" name="name" value={formData.name} onChange={handleChange} required />
-                    <Input label="メール" name="email" type="email" value={formData.email} onChange={handleChange} required />
+                    <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-1">名前</label>
+                        <Input name="name" value={formData.name} onChange={handleChange} required />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-1">メール</label>
+                        <Input name="email" type="email" value={formData.email} onChange={handleChange} required />
+                    </div>
                 </div>
-                <Input label={user ? "新しいパスワード（任意）" : "パスワード"} name="password" type="password" value={formData.password} onChange={handleChange} required={!user} />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="password">{user ? "新しいパスワード（任意）" : "パスワード"}</Label>
+                        <div className="relative">
+                            <Input
+                                id="password"
+                                name="password" 
+                                type={showPassword ? "text" : "password"} 
+                                value={formData.password} 
+                                onChange={handleChange} 
+                                required={!user}
+                                className="pr-10"
+                            />
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                                onClick={() => setShowPassword(!showPassword)}
+                            >
+                                {showPassword ? (
+                                    <EyeOff className="h-4 w-4" />
+                                ) : (
+                                    <Eye className="h-4 w-4" />
+                                )}
+                            </Button>
+                        </div>
+                    </div>
+                    <div></div>
+                </div>
                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
                         <label className="block text-sm font-medium text-slate-700 mb-1">役割</label>
@@ -58,7 +95,10 @@ const UserForm: React.FC<{ user?: User | null; onSave: (user: Omit<User, 'id'> |
                             <option value={PayType.MONTHLY}>月給</option>
                         </select>
                     </div>
-                    <Input label={formData.payType === PayType.HOURLY ? '時給' : '月給'} name="payRate" type="number" value={formData.payRate} onChange={handleChange} required />
+                    <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-1">{formData.payType === PayType.HOURLY ? '時給' : '月給'}</label>
+                        <Input name="payRate" type="number" value={formData.payRate} onChange={handleChange} required />
+                    </div>
                 </div>
                 <div className="flex justify-end gap-3 pt-2">
                     <Button type="button" variant="secondary" onClick={onCancel}>キャンセル</Button>
