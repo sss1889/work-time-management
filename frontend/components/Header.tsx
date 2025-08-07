@@ -68,6 +68,14 @@ const Header: React.FC<HeaderProps> = ({ title }) => {
           <div className="flex items-center space-x-4">
             <ThemeToggle />
             
+            {/* Temporary direct links for testing */}
+            <Button variant="ghost" size="sm" onClick={() => navigate('/profile')}>
+              プロフィール
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => navigate('/settings')}>
+              設定
+            </Button>
+            
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-10 w-10 rounded-full">

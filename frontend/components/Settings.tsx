@@ -23,7 +23,8 @@ import {
   Save,
   Check,
   Globe,
-  Clock
+  Clock,
+  Lock
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -249,7 +250,8 @@ const Settings: React.FC = () => {
           </div>
 
           <div className="pt-4 border-t">
-            <Button variant="outline" className="w-full sm:w-auto">
+            <Button variant="outline" className="w-full sm:w-auto" onClick={() => {/* TODO: パスワード変更モーダル */}}>
+              <Lock className="h-4 w-4 mr-2" />
               パスワードを変更
             </Button>
           </div>

@@ -56,6 +56,7 @@ func (r *Router) Setup(engine *gin.Engine) {
 	profile.Use(r.authMiddleware.RequireAuth())
 	{
 		profile.PUT("", r.userHandler.UpdateMyProfile)
+		profile.POST("/change-password", r.userHandler.ChangePassword)
 	}
 
 	attendance := api.Group("/attendance")
