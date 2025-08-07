@@ -7,6 +7,8 @@ import { Button } from './ui/button';
 import { FormField } from './ui/form-field';
 import { Badge } from './ui/badge';
 import { Avatar, AvatarFallback } from './ui/avatar';
+import { EmptyState } from './ui/empty-state';
+import { ErrorState } from './ui/error-state';
 import { 
   Calendar, 
   User, 
@@ -29,7 +31,7 @@ interface DailyReport {
 }
 
 const DailyReports: React.FC = () => {
-  const { dailyReports, fetchDailyReports, loading } = useContext(DataContext);
+  const { dailyReports, fetchDailyReports, loading, error } = useContext(DataContext);
   const { user: currentUser } = useContext(AuthContext);
   
   // フィルタリング・ソート状態
@@ -295,23 +297,36 @@ const DailyReports: React.FC = () => {
       )}
 
       {/* コンテンツ */}
-      {loading ? (
+      {error ? (
+        <ErrorState
+          title="日報の読み込みに失敗しました"
+          description="ネットワーク接続を確認して、もう一度お試しください。"
+          error={error}
+          onRetry={fetchDailyReports}
+        />
+      ) : loading ? (
         <div className="space-y-4">
           {Array.from({ length: 5 }).map((_, i) => (
             <SkeletonCard key={i} />
           ))}
         </div>
       ) : filteredAndSortedReports.length === 0 ? (
-        <Card className="p-12 text-center">
-          <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-          <h3 className="text-lg font-semibold mb-2">日報が見つかりません</h3>
-          <p className="text-muted-foreground">
-            {searchQuery || selectedUser !== 'all' || selectedDate 
-              ? 'フィルター条件を変更してみてください。'
-              : 'まだ日報が提出されていません。'
+        <EmptyState
+          icon={FileText}
+          title="日報が見つかりません"
+          description={searchQuery || selectedUser !== 'all' || selectedDate 
+            ? 'フィルター条件を変更してみてください。'
+            : 'まだ日報が提出されていません。'
+          }
+          action={searchQuery || selectedUser !== 'all' || selectedDate ? {
+            label: 'フィルターをリセット',
+            onClick: () => {
+              setSearchQuery('');
+              setSelectedUser('all');
+              setSelectedDate('');
             }
-          </p>
-        </Card>
+          } : undefined}
+        />
       ) : (
         <div className={viewMode === 'card' ? 'space-y-6' : 'space-y-2'}>
           {filteredAndSortedReports.map((report: DailyReport, index) => {

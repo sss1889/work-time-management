@@ -7,7 +7,20 @@ import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
-import { Eye, EyeOff } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '../ui/alert-dialog';
+import { EmptyState } from '../ui/empty-state';
+import { ErrorState } from '../ui/error-state';
+import { Eye, EyeOff, Trash2, Users } from 'lucide-react';
 
 const UserForm: React.FC<{ user?: User | null; onSave: (user: Omit<User, 'id'> | User) => void; onCancel: () => void; }> = ({ user, onSave, onCancel }) => {
     const [formData, setFormData] = useState({
@@ -111,7 +124,7 @@ const UserForm: React.FC<{ user?: User | null; onSave: (user: Omit<User, 'id'> |
 
 
 const UserManagement: React.FC = () => {
-    const { users, addUser, updateUser, deleteUser } = useContext(DataContext);
+    const { users, addUser, updateUser, deleteUser, loading, error } = useContext(DataContext);
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [editingUser, setEditingUser] = useState<User | null>(null);
 
@@ -152,6 +165,19 @@ const UserManagement: React.FC = () => {
         setEditingUser(null);
     };
 
+    const handleDeleteUser = async (user: User) => {
+        try {
+            await deleteUser(user.id);
+            toast.success('ユーザーを削除しました', {
+                description: `${user.name}を削除しました`,
+            });
+        } catch (error) {
+            toast.error('削除に失敗しました', {
+                description: 'もう一度お試しください',
+            });
+        }
+    };
+
     return (
         <div className="space-y-6">
             <div className="flex justify-between items-center">
@@ -161,7 +187,24 @@ const UserManagement: React.FC = () => {
 
             {isFormOpen && <UserForm user={editingUser} onSave={handleSaveUser} onCancel={handleCancel} />}
 
-            <Card className="overflow-x-auto">
+            {error ? (
+                <ErrorState
+                    title="ユーザー情報の読み込みに失敗しました"
+                    description="ネットワーク接続を確認して、もう一度お試しください。"
+                    error={error}
+                />
+            ) : users.length === 0 && !loading ? (
+                <EmptyState
+                    icon={Users}
+                    title="ユーザーが登録されていません"
+                    description="新しいユーザーを追加して管理を開始しましょう。"
+                    action={{
+                        label: '新規ユーザー追加',
+                        onClick: handleAddNew
+                    }}
+                />
+            ) : (
+                <Card className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-slate-200">
                     <thead className="bg-slate-50">
                         <tr>
@@ -179,26 +222,48 @@ const UserManagement: React.FC = () => {
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">{user.email}</td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500"><span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${user.role === Role.ADMIN ? 'bg-primary-100 text-primary-800' : 'bg-green-100 text-green-800'}`}>{user.role}</span></td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">{new Intl.NumberFormat('ja-JP').format(user.payRate)} JPY / {user.payType === PayType.HOURLY ? 'hr' : 'mo'}</td>
-                                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
-                                    <Button onClick={() => handleEdit(user)} variant="secondary">編集</Button>
-                                    <Button onClick={async () => {
-                                        try {
-                                            await deleteUser(user.id);
-                                            toast.success('ユーザーを削除しました', {
-                                                description: `${user.name}を削除しました`,
-                                            });
-                                        } catch (error) {
-                                            toast.error('削除に失敗しました', {
-                                                description: 'もう一度お試しください',
-                                            });
-                                        }
-                                    }} variant="danger" disabled={user.role === Role.ADMIN}>削除</Button>
+                                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                    <div className="flex justify-end gap-2">
+                                        <Button onClick={() => handleEdit(user)} variant="outline" size="sm">
+                                            編集
+                                        </Button>
+                                        <AlertDialog>
+                                            <AlertDialogTrigger asChild>
+                                                <Button 
+                                                    variant="destructive" 
+                                                    size="sm" 
+                                                    disabled={user.role === Role.ADMIN}
+                                                >
+                                                    <Trash2 className="h-4 w-4" />
+                                                </Button>
+                                            </AlertDialogTrigger>
+                                            <AlertDialogContent>
+                                                <AlertDialogHeader>
+                                                    <AlertDialogTitle>ユーザーを削除しますか？</AlertDialogTitle>
+                                                    <AlertDialogDescription>
+                                                        <strong>{user.name}</strong> ({user.email}) を削除しようとしています。
+                                                        この操作は取り消すことができません。関連する勤怠データも削除される可能性があります。
+                                                    </AlertDialogDescription>
+                                                </AlertDialogHeader>
+                                                <AlertDialogFooter>
+                                                    <AlertDialogCancel>キャンセル</AlertDialogCancel>
+                                                    <AlertDialogAction 
+                                                        onClick={() => handleDeleteUser(user)}
+                                                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                                    >
+                                                        削除する
+                                                    </AlertDialogAction>
+                                                </AlertDialogFooter>
+                                            </AlertDialogContent>
+                                        </AlertDialog>
+                                    </div>
                                 </td>
                             </tr>
                         ))}
                     </tbody>
                 </table>
-            </Card>
+                </Card>
+            )}
         </div>
     );
 };
