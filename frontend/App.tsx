@@ -11,6 +11,8 @@ import Header from './components/Header';
 import TimeEntry from './components/TimeEntry';
 import AttendanceHistory from './components/AttendanceHistory';
 import DailyReports from './components/DailyReports';
+import Profile from './components/Profile';
+import Settings from './components/Settings';
 import AdminDashboard from './components/admin/AdminDashboard';
 import UserManagement from './components/admin/UserManagement';
 import Payroll from './components/admin/Payroll';
@@ -49,6 +51,8 @@ const MainLayout: React.FC = () => {
         '/time-entry': '勤怠入力',
         '/history': '勤怠履歴',
         '/reports': '日報一覧',
+        '/profile': 'プロフィール',
+        '/settings': '設定',
         '/admin/dashboard': '管理者ダッシュボード',
         '/admin/users': 'ユーザー管理',
         '/admin/payroll': '月次給与',
@@ -67,6 +71,8 @@ const MainLayout: React.FC = () => {
                         <Route path="/time-entry" element={<ProtectedRoute><TimeEntry /></ProtectedRoute>} />
                         <Route path="/history" element={<ProtectedRoute><AttendanceHistory /></ProtectedRoute>} />
                         <Route path="/reports" element={<ProtectedRoute><DailyReports /></ProtectedRoute>} />
+                        <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+                        <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
                         <Route path="/admin/dashboard" element={<ProtectedRoute allowedRoles={[Role.ADMIN]}><AdminDashboard /></ProtectedRoute>} />
                         <Route path="/admin/users" element={<ProtectedRoute allowedRoles={[Role.ADMIN]}><UserManagement /></ProtectedRoute>} />
                         <Route path="/admin/payroll" element={<ProtectedRoute allowedRoles={[Role.ADMIN]}><Payroll /></ProtectedRoute>} />
