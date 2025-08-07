@@ -2,9 +2,10 @@
 import React, { useState, useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import { DataContext } from '../context/DataContext';
-import Card from './ui/Card';
-import Input from './ui/Input';
-import Button from './ui/Button';
+import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
+import { Input } from './ui/input';
+import { Button } from './ui/button';
+import { Label } from './ui/label';
 
 const TimeEntry: React.FC = () => {
   const { user } = useContext(AuthContext);
@@ -45,50 +46,61 @@ const TimeEntry: React.FC = () => {
 
   return (
     <div className="max-w-2xl mx-auto">
-      <Card className="p-6 sm:p-8">
-        <h2 className="text-2xl font-bold text-slate-800 mb-6">勤怠時間の入力</h2>
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-2xl">勤怠時間の入力</CardTitle>
+        </CardHeader>
+        <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Input
-              label="日付"
-              id="date"
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-              required
-            />
-             <Input
-              label="休憩（分）"
-              id="break"
-              type="number"
-              value={breakMinutes}
-              onChange={(e) => setBreakMinutes(e.target.value)}
-              required
-              min="0"
-            />
+            <div className="space-y-2">
+              <Label htmlFor="date">日付</Label>
+              <Input
+                id="date"
+                type="date"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="break">休憩（分）</Label>
+              <Input
+                id="break"
+                type="number"
+                value={breakMinutes}
+                onChange={(e) => setBreakMinutes(e.target.value)}
+                required
+                min="0"
+              />
+            </div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Input
-              label="開始時刻"
-              id="start-time"
-              type="time"
-              value={startTime}
-              onChange={(e) => setStartTime(e.target.value)}
-              required
-            />
-            <Input
-              label="終了時刻"
-              id="end-time"
-              type="time"
-              value={endTime}
-              onChange={(e) => setEndTime(e.target.value)}
-              required
-            />
+            <div className="space-y-2">
+              <Label htmlFor="start-time">開始時刻</Label>
+              <Input
+                id="start-time"
+                type="time"
+                value={startTime}
+                onChange={(e) => setStartTime(e.target.value)}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="end-time">終了時刻</Label>
+              <Input
+                id="end-time"
+                type="time"
+                value={endTime}
+                onChange={(e) => setEndTime(e.target.value)}
+                required
+              />
+            </div>
           </div>
-          <div>
-            <label htmlFor="report" className="block text-sm font-medium text-slate-700 mb-1">
+          <div className="space-y-2">
+            <Label htmlFor="report">
               本日の報告（今日の作業内容）
-            </label>
+            </Label>
             <textarea
               id="report"
               rows={5}
@@ -106,6 +118,7 @@ const TimeEntry: React.FC = () => {
             </Button>
           </div>
         </form>
+        </CardContent>
       </Card>
     </div>
   );
