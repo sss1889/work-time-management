@@ -6,7 +6,10 @@ import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Input } from './ui/input';
 import { Button } from './ui/button';
+import { KPICard } from './ui/kpi-card';
+import { ProgressRing } from './ui/progress-ring';
 import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { Calendar, Clock, Target, TrendingUp } from 'lucide-react';
 
 // Helper to calculate detailed info for a single record
 const calculateDailyInfo = (record: AttendanceRecord, user: User | undefined) => {
@@ -192,6 +195,14 @@ const AttendanceHistory: React.FC = () => {
         return displayedUser ? calculateTotalSalary(filteredRecords, displayedUser) : 0;
     }, [filteredRecords, displayedUser]);
     
+    const totalHours = useMemo(() => {
+        if (!displayedUser) return 0;
+        return filteredRecords.reduce((acc, record) => {
+            const { workHours } = calculateDailyInfo(record, displayedUser);
+            return acc + workHours;
+        }, 0);
+    }, [filteredRecords, displayedUser]);
+    
     const barChartData = useMemo(() => {
         if (!displayedUser) return [];
         // filteredRecords is sorted descending, so we reverse it to process chronologically
@@ -223,8 +234,8 @@ const AttendanceHistory: React.FC = () => {
     if (!currentUser) return null;
 
     return (
-        <div className="space-y-6">
-            <Card className="p-4 sm:p-6">
+        <div className="space-y-6 animate-fade-in">
+            <Card className="p-4 sm:p-6 animate-scale-in">
                  <div className="flex flex-wrap items-center justify-between gap-y-4 gap-x-2 mb-6">
                     {currentUser.role === Role.ADMIN && (
                         <div className="w-full sm:w-auto">
@@ -248,19 +259,43 @@ const AttendanceHistory: React.FC = () => {
                     </div>
                  </div>
                  
+                {/* KPI Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <div className="animate-slide-up animate-stagger-1">
+                        <KPICard
+                            title="総労働時間"
+                            value={`${totalHours.toFixed(1)}h`}
+                            icon={Clock}
+                            description="今月の累計時間"
+                        />
+                    </div>
+                    <div className="animate-slide-up animate-stagger-2">
+                        <KPICard
+                            title="累計給与"
+                            value={formatCurrency(totalSalary)}
+                            icon={TrendingUp}
+                            description="今月の収入"
+                        />
+                    </div>
+                    <div className="animate-slide-up animate-stagger-3">
+                        <KPICard
+                            title="達成率"
+                            value={`${achievementPercentage}%`}
+                            icon={Target}
+                            description="目標達成率"
+                            valueClassName={achievementPercentage >= 100 ? "text-green-600 dark:text-green-400" : "text-primary"}
+                        />
+                    </div>
+                </div>
+                
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-center">
-                    <div className="lg:col-span-1 relative flex items-center justify-center h-40">
-                         <ResponsiveContainer width="100%" height="100%">
-                            <PieChart>
-                                <Pie data={pieChartData} dataKey="value" innerRadius="70%" outerRadius="100%" startAngle={90} endAngle={450} cornerRadius={5} paddingAngle={monthlyGoal > 0 && totalSalary > 0 ? 2 : 0}>
-                                    {pieChartData.map((entry, index) => <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} stroke={PIE_COLORS[index % PIE_COLORS.length]} />)}
-                                </Pie>
-                            </PieChart>
-                         </ResponsiveContainer>
-                         <div className="absolute flex flex-col items-center justify-center text-center">
-                             <span className="text-3xl font-bold text-slate-800">{achievementPercentage}%</span>
-                             <span className="text-sm text-slate-500 mt-1">達成率</span>
-                         </div>
+                    <div className="lg:col-span-1 flex items-center justify-center">
+                        <ProgressRing
+                            progress={achievementPercentage}
+                            size={160}
+                            strokeWidth={12}
+                            color={achievementPercentage >= 100 ? "#10b981" : "hsl(var(--primary))"}
+                        />
                     </div>
                     <div className="lg:col-span-2 space-y-4">
                         <h3 className="text-lg font-semibold text-slate-800">月次目標進捗</h3>
@@ -299,7 +334,7 @@ const AttendanceHistory: React.FC = () => {
             </Card>
 
             {filteredRecords.length > 0 && (
-                <Card className="p-4 sm:p-6">
+                <Card className="p-4 sm:p-6 animate-slide-up animate-stagger-2">
                     <h3 className="font-semibold text-slate-800 mb-4">日別収入</h3>
                     <ResponsiveContainer width="100%" height={300}>
                         <BarChart data={barChartData} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
@@ -317,7 +352,7 @@ const AttendanceHistory: React.FC = () => {
                 </Card>
             )}
 
-            <Card className="overflow-x-auto">
+            <Card className="overflow-x-auto animate-slide-up animate-stagger-3">
                 <table className="min-w-full divide-y divide-slate-200">
                     <thead className="bg-slate-50">
                         <tr>
@@ -354,7 +389,7 @@ const AttendanceHistory: React.FC = () => {
                                         </td>
                                     )}
                                 </tr>
-                             )
+                             );
                         })}
                     </tbody>
                 </table>
