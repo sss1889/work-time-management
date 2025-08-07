@@ -46,8 +46,6 @@ func (s *slackService) SendAttendanceNotification(userName string, date time.Tim
 	if s.webhookURL == "" {
 		return fmt.Errorf("Slack webhook URL is not configured")
 	}
-	
-	fmt.Printf("DEBUG: Slack webhook URL: %s\n", s.webhookURL)
 
 	dateStr := date.Format("2006-01-02")
 	startTimeStr := startTime.Format("15:04")

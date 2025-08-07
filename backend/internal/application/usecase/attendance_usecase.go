@@ -64,9 +64,6 @@ func (u *attendanceUseCase) GetMyAttendances(ctx context.Context, userID int, mo
 }
 
 func (u *attendanceUseCase) CreateAttendance(ctx context.Context, req *request.CreateAttendanceRequest, userID int) (*dto.AttendanceResponse, error) {
-	log.Printf("CreateAttendance called - UserID: %d, Date: %s, StartTime: %s, EndTime: %s, Report: %s", 
-		userID, req.Date, req.StartTime, req.EndTime, req.Report)
-	
 	// Validate request
 	if err := req.Validate(); err != nil {
 		return nil, fmt.Errorf("invalid request: %w", err)
@@ -106,16 +103,12 @@ func (u *attendanceUseCase) CreateAttendance(ctx context.Context, req *request.C
 
 	// Send Slack notification asynchronously
 	go func() {
-		log.Printf("Starting Slack notification for user ID: %d", userID)
-		
 		// Use background context for async operation
 		user, err := u.userRepo.FindById(context.Background(), userID)
 		if err != nil {
 			log.Printf("Failed to get user for Slack notification: %v", err)
 			return
 		}
-		
-		log.Printf("Sending Slack notification for user: %s", user.Name)
 
 		// Send Slack notification
 		err = u.slackService.SendAttendanceNotification(
@@ -128,8 +121,6 @@ func (u *attendanceUseCase) CreateAttendance(ctx context.Context, req *request.C
 		)
 		if err != nil {
 			log.Printf("Failed to send Slack notification: %v", err)
-		} else {
-			log.Printf("Slack notification sent successfully for user: %s", user.Name)
 		}
 	}()
 
