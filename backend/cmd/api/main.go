@@ -13,6 +13,7 @@ import (
 	"github.com/attendance_report_app/backend/internal/infrastructure/database"
 	"github.com/attendance_report_app/backend/internal/infrastructure/gorm/repository"
 	"github.com/attendance_report_app/backend/internal/infrastructure/jwt"
+	"github.com/attendance_report_app/backend/internal/infrastructure/slack"
 	"github.com/attendance_report_app/backend/internal/interface/handler"
 	"github.com/attendance_report_app/backend/internal/interface/middleware"
 	"github.com/attendance_report_app/backend/internal/interface/router"
@@ -39,8 +40,10 @@ func main() {
 		7*24*time.Hour, // 7 days for development
 	)
 
+	slackService := slack.NewSlackService(os.Getenv("SLACK_WEBHOOK_URL"))
+
 	userUseCase := usecase.NewUserUseCase(userRepo, tokenService)
-	attendanceUseCase := usecase.NewAttendanceUseCase(attendanceRepo)
+	attendanceUseCase := usecase.NewAttendanceUseCase(attendanceRepo, userRepo, slackService)
 	dailyReportUseCase := usecase.NewDailyReportUseCase(attendanceRepo, userRepo)
 	adminUseCase := usecase.NewAdminUseCase(userRepo, attendanceRepo)
 

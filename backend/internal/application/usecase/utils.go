@@ -64,13 +64,27 @@ func ParseDate(dateStr string) (time.Time, error) {
 	return date, nil
 }
 
-// ParseTime parses a time string in RFC3339 format
+// ParseTime parses a time string in various formats
 func ParseTime(timeStr string) (time.Time, error) {
+	// Try RFC3339 format first (with timezone)
 	t, err := time.Parse(TimeFormat, timeStr)
-	if err != nil {
-		return time.Time{}, fmt.Errorf("invalid time format: %w", err)
+	if err == nil {
+		return t, nil
 	}
-	return t, nil
+	
+	// Try without timezone (frontend format)
+	t, err = time.Parse("2006-01-02T15:04:05", timeStr)
+	if err == nil {
+		return t, nil
+	}
+	
+	// Try without seconds
+	t, err = time.Parse("2006-01-02T15:04", timeStr)
+	if err == nil {
+		return t, nil
+	}
+	
+	return time.Time{}, fmt.Errorf("invalid time format: %w", err)
 }
 
 // ParseMonth parses a month string in YYYY-MM format

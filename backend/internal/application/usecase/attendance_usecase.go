@@ -3,12 +3,14 @@ package usecase
 import (
 	"context"
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/attendance_report_app/backend/internal/application/dto"
 	"github.com/attendance_report_app/backend/internal/application/dto/request"
 	"github.com/attendance_report_app/backend/internal/domain/entity"
 	"github.com/attendance_report_app/backend/internal/domain/repository"
+	"github.com/attendance_report_app/backend/internal/infrastructure/slack"
 )
 
 type AttendanceUseCase interface {
@@ -19,11 +21,15 @@ type AttendanceUseCase interface {
 
 type attendanceUseCase struct {
 	attendanceRepo repository.AttendanceRepository
+	userRepo       repository.UserRepository
+	slackService   slack.SlackService
 }
 
-func NewAttendanceUseCase(attendanceRepo repository.AttendanceRepository) AttendanceUseCase {
+func NewAttendanceUseCase(attendanceRepo repository.AttendanceRepository, userRepo repository.UserRepository, slackService slack.SlackService) AttendanceUseCase {
 	return &attendanceUseCase{
 		attendanceRepo: attendanceRepo,
+		userRepo:       userRepo,
+		slackService:   slackService,
 	}
 }
 
@@ -58,6 +64,9 @@ func (u *attendanceUseCase) GetMyAttendances(ctx context.Context, userID int, mo
 }
 
 func (u *attendanceUseCase) CreateAttendance(ctx context.Context, req *request.CreateAttendanceRequest, userID int) (*dto.AttendanceResponse, error) {
+	log.Printf("CreateAttendance called - UserID: %d, Date: %s, StartTime: %s, EndTime: %s, Report: %s", 
+		userID, req.Date, req.StartTime, req.EndTime, req.Report)
+	
 	// Validate request
 	if err := req.Validate(); err != nil {
 		return nil, fmt.Errorf("invalid request: %w", err)
@@ -94,6 +103,35 @@ func (u *attendanceUseCase) CreateAttendance(ctx context.Context, req *request.C
 	if err != nil {
 		return nil, fmt.Errorf("failed to create attendance: %w", err)
 	}
+
+	// Send Slack notification asynchronously
+	go func() {
+		log.Printf("Starting Slack notification for user ID: %d", userID)
+		
+		// Use background context for async operation
+		user, err := u.userRepo.FindById(context.Background(), userID)
+		if err != nil {
+			log.Printf("Failed to get user for Slack notification: %v", err)
+			return
+		}
+		
+		log.Printf("Sending Slack notification for user: %s", user.Name)
+
+		// Send Slack notification
+		err = u.slackService.SendAttendanceNotification(
+			user.Name,
+			date,
+			startTime,
+			endTime,
+			req.BreakMinutes,
+			req.Report,
+		)
+		if err != nil {
+			log.Printf("Failed to send Slack notification: %v", err)
+		} else {
+			log.Printf("Slack notification sent successfully for user: %s", user.Name)
+		}
+	}()
 
 	return dto.ToAttendanceResponse(createdAttendance), nil
 }
